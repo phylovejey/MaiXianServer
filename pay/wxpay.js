@@ -54,7 +54,6 @@ var wxpay = {
         };
         var string = this.raw(ret);
         string = string + '&key=' + wxconfig.mxshopapikey; //key为在微信商户平台(pay.weixin.qq.com)-->账户设置-->API安全-->密钥设置
-        var crypto = require('crypto');
         var sign = crypto.createHash('md5').update(string, 'utf8').digest('hex');
         return sign.toUpperCase();
     },
@@ -82,6 +81,9 @@ var wxpay = {
         request({
             url: wxconfig.wxunipayurl,
             method: 'POST',
+            headers: {
+                'content-type': 'text/xml'
+            },
             body: formData
         }, function(err, response, body) {
             if (!err && response.statusCode == 200) {

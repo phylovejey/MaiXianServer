@@ -1,3 +1,5 @@
+var uuidV1 = require('uuid/v1');
+
 var commonfunc = {
     // 随机字符串产生函数
     createNonceStr: function() {
@@ -10,7 +12,11 @@ var commonfunc = {
     },
 
     createTradeNo:function() {
-    	return 
+    	return uuidV1().toString();
+    },
+
+    createSessionId:function() {
+        return uuidV1().toString();
     }
 }
 

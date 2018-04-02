@@ -4,6 +4,7 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+var wxlogin = require('./routes/wxlogin');
 var indexRouter = require('./routes/index');
 var itemdetail = require('./routes/itemdetail');
 var order = require('./routes/order');
@@ -31,6 +32,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/wxlogin', wxlogin);
 app.use('/index', indexRouter);
 app.use('/item', itemdetail);
 app.use('/order', order);
