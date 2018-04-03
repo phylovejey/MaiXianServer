@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var commonfunc = require('../global/commonfunc');
 var wxpay = require('../pay/wxpay');
+var orders = require('../modes/orders');
 
 /* 用户下单 */
 router.post('/', function(req, res, next) {
@@ -13,6 +14,11 @@ router.post('/', function(req, res, next) {
 		console.log("phy failed ", err);
 		next(err);})
 	.catch((err) => next(err));
+});
+
+/* 用户获取订单信息 */
+router.get('/', function(req, res, next) {
+	res.send("send all orders to user");
 });
 
 /* 支付回调通知 */
