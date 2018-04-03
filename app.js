@@ -10,6 +10,7 @@ var indexRouter = require('./routes/index');
 var itemdetail = require('./routes/itemdetail');
 var order = require('./routes/order');
 var usersRouter = require('./routes/users');
+var agent = require('./routes/agent');
 
 var mongoose = require('mongoose').set('debug', true);
 mongoose.Promise = require('bluebird');
@@ -54,6 +55,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 							res.send({status:0, error:{error_code:999, error_des:"sessionid已过期,请重新登录"}});
 						}
 						else {
+							req.locals.user_openid = object.open_id;
 							next();
 						}
 					}
@@ -74,6 +76,7 @@ app.use('/index', indexRouter);
 app.use('/item', itemdetail);
 app.use('/order', order);
 app.use('/users', usersRouter);
+app.use('/agent', agent);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

@@ -61,6 +61,10 @@ const orderSchema = new Schema({
 		type: String,
 		required: true
 	},
+	agent_id: {
+		type: String,
+		default: ''
+	},
 	items: [purchaseitem],
 }, {
 	timestamps: true

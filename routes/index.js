@@ -17,12 +17,12 @@ router.get('/', function(req, res, next) {
 	.catch((err) => next(err));
 });
 
-/*router.post('/', function(req, res, next) {
+router.post('/', function(req, res, next) {
 	itemlists.create(req.body)
 	.then((item) => {
 		res.send({status:1, item:item});
 	}, (err) => next(err))
 	.catch((err) => next(err));
-});*/
+});
 
 module.exports = router;

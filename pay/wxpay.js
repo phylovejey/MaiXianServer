@@ -90,6 +90,8 @@ var wxpay = {
         }, function(err, response, body) {
             if (!err && response.statusCode == 200) {
                 var return_code = self.getXMLNodeValue('return_code', body.toString("utf-8")).split('[')[2].split(']')[0];
+                console.log("phy body ", body);
+                
                 if(return_code == "SUCCESS") {
                     var prepay_id = self.getXMLNodeValue('prepay_id', body.toString("utf-8")).split('[')[2].split(']')[0];
                     //签名
