@@ -55,7 +55,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 							res.send({status:0, error:{error_code:999, error_des:"sessionid已过期,请重新登录"}});
 						}
 						else {
-							req.locals.user_openid = object.open_id;
+							req.locals.user_openid = object.openid;
 							next();
 						}
 					}

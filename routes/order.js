@@ -9,8 +9,8 @@ var agents = require('../models/agents');
 
 /* 用户下单 */
 router.post('/', function(req, res, next) {
-	var trade_no = "1234567111";//commonfunc.createTradeNo();
-	var open_id = "otek55KU4BiuY9S5OaG_40XTLvP8";//res.locals.user_openid
+	var trade_no = "12345671118";//commonfunc.createTradeNo();
+	var open_id = "otek55C4yYD0hfqTqv_cWx2su7z4";//res.locals.user_openid
 	var user_ip = "119.27.163.117";
 
 	var validagent = false;
@@ -37,7 +37,7 @@ router.post('/', function(req, res, next) {
 				fee = fee + items[i].normalprice;
 			}
 		}
-		total_fee = fee;
+		total_fee = 1;
 		console.log("phy total_fee ", total_fee);
 		return wxpay.order("JSAPI pay test", open_id, trade_no, total_fee, user_ip);
 	}, (err) => next(err))

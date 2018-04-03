@@ -26,6 +26,7 @@ router.post('/', function(req, res, next){
                 data.expiredtime = commonfunc.createTimeStamp() + wxconfig.wxsessionidvalidtime;
                 redis.setsession(sessionid, data, function(err) {
                     if(err) {
+                        console.log("phy err ", err);
                         mxres.send({status:0, error:"服务器错误"});
                     }
                     else {
