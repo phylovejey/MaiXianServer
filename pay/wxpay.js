@@ -2,6 +2,7 @@ const wxconfig = require('../global/serverconfig').wxconfig;
 const commonfunc = require('../global/commonfunc');
 var request = require("request");
 var crypto = require('crypto');
+var Q = require('q');
 
 var wxpay = {
     getXMLNodeValue: function(node_name, xml) {
@@ -60,7 +61,11 @@ var wxpay = {
 
     // 此处的attach不能为空值 否则微信提示签名错误
     order: function(body, openid, trade_no, total_fee, user_ip) {
+        var deferred = Q.defer();
         var nonce_str = commonfunc.createNonceStr();
+        var timeStamp = commonfunc.createTimeStamp();
+        var sign = this.paysignjsapi(wxconfig.mxappid, body, wxconfig.mxshopaccount, nonce_str, wxconfig.wxpaynotifyurl, openid, 
+            trade_no, user_ip, total_fee, 'JSAPI');
 
         var formData = "<xml>";
         formData += "<appid>" + wxconfig.mxappid + "</appid>"; //appid
@@ -73,7 +78,7 @@ var wxpay = {
         formData += "<spbill_create_ip>" + user_ip + "</spbill_create_ip>";
         formData += "<total_fee>" + total_fee + "</total_fee>";
         formData += "<trade_type>JSAPI</trade_type>";
-        formData += "<sign>" + this.paysignjsapi(wxconfig.mxappid, body, wxconfig.mxshopaccount, nonce_str, wxconfig.wxpaynotifyurl, openid, trade_no, user_ip, total_fee, 'JSAPI') + "</sign>";
+        formData += "<sign>" + sign + "</sign>";
         formData += "</xml>";
 
         var self = this;
@@ -81,31 +86,34 @@ var wxpay = {
         request({
             url: wxconfig.wxunipayurl,
             method: 'POST',
-            headers: {
-                'content-type': 'text/xml'
-            },
             body: formData
         }, function(err, response, body) {
             if (!err && response.statusCode == 200) {
-                console.log(body);
-                var prepay_id = self.getXMLNodeValue('prepay_id', body.toString("utf-8"));
-                var tmp = prepay_id.split('[');
-                var tmp1 = tmp[2].split(']');
-                //签名
-                var _paySignjs = self.paysignjs(appid, nonce_str, 'prepay_id=' + tmp1[0], 'MD5', timeStamp);
-                var args = {
-                    appId: appid,
-                    timeStamp: timeStamp,
-                    nonceStr: nonce_str,
-                    signType: "MD5",
-                    package: tmp1[0],
-                    paySign: _paySignjs
-                };
+                var return_code = self.getXMLNodeValue('return_code', body.toString("utf-8")).split('[')[2].split(']')[0];
+                if(return_code == "SUCCESS") {
+                    var prepay_id = self.getXMLNodeValue('prepay_id', body.toString("utf-8")).split('[')[2].split(']')[0];
+                    //签名
+                    var _paySignjs = self.paysignjs(wxconfig.mxappid, nonce_str, 'prepay_id=' + prepay_id, 'MD5', timeStamp);
+                    var args = {
+                        appId: wxconfig.mxappid,
+                        timeStamp: timeStamp,
+                        nonceStr: nonce_str,
+                        signType: "MD5",
+                        package: prepay_id,
+                        paySign: _paySignjs
+                    };
+                    deferred.resolve(args);
+                }
+                else {
+                    deferred.reject(body);
+                }
             } 
             else {
-                console.log(body);
+                deferred.reject(body);
             }
         });
+
+        return deferred.promise;
     },
 };
 

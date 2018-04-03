@@ -5,8 +5,14 @@ var wxpay = require('../pay/wxpay');
 
 /* 用户下单 */
 router.post('/', function(req, res, next) {
-	console.log("phy /order ", req.body);
-	wxpay.order("JSAPI支付测试", "otek55KU4BiuY9S5OaG_40XTLvP8", "1234567", 1, "119.27.163.117");
+	wxpay.order("JSAPI pay test", "otek55KU4BiuY9S5OaG_40XTLvP8", "1234567", "1", "119.27.163.117")
+	.then((args) => {
+		console.log("phy SUCCESS ", args);
+		res.send({status:1, payinfo:args});
+	}, (err) => {
+		console.log("phy failed ", err);
+		next(err);})
+	.catch((err) => next(err));
 });
 
 /* 支付回调通知 */
