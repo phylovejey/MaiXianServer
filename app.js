@@ -3,6 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var commonfunc = require('./global/commonfunc');
 
 var wxlogin = require('./routes/wxlogin');
 var indexRouter = require('./routes/index');
@@ -20,6 +21,9 @@ connect.then((db) => {
 	console.log('Connected correctly to server');
 }, (err) => { console.log(err);});
 
+const redis = require('./global/redis');
+redis.connettoredis('127.0.0.1', '6379');
+
 var app = express();
 
 // view engine setup
@@ -31,6 +35,39 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use((req, res, next) => {
+	if(req.url === '/wxlogin') {
+		next();
+	}
+	else {
+		var sessionid = req.headers.sessionid;
+		if(sessionid != null) {
+			redis.getsession(sessionid, function(err, object) {
+				if(err) {
+					res.send({status:0, error:{error_code:10000, error_des:"服务器登录错误"}});
+				}
+				else {
+					if(object != null) {
+						if(commonfunc.createTimeStamp() > object.expiredtime) {
+							redis.removesession(sessionid);
+							res.send({status:0, error:{error_code:999, error_des:"sessionid已过期,请重新登录"}});
+						}
+						else {
+							next();
+						}
+					}
+					else {
+						res.send({status:0, error:{error_code:997, error_des:"无效的sessionid"}});
+					}
+				}
+			});
+		}
+		else {
+			res.send({status:0, error:{error_code:998, error_des:"sessionid不能为空"}});
+		}
+	}
+});
 
 app.use('/wxlogin', wxlogin);
 app.use('/index', indexRouter);

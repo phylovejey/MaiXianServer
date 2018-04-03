@@ -8,7 +8,7 @@ var commonfunc = {
 
     // 时间戳产生函数
     createTimeStamp: function() {
-        return parseInt(new Date().getTime() / 1000) + '';
+        return parseInt(new Date().getTime() / 1000);
     },
 
     createTradeNo:function() {

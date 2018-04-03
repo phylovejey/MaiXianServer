@@ -3,6 +3,7 @@ var config = {
 		wxloginurl: 'https://api.weixin.qq.com/sns/jscode2session',
 		wxunipayurl: 'https://api.mch.weixin.qq.com/pay/unifiedorder',
 		wxpaynotifyurl: 'https://www.ccyangche.com/order/notify',
+		wxsessionidvalidtime: 604800,
 		mxappid: 'wxf40b8a310ac448ee',
 		mxsecret: '857185500a63ee246163486da3ca6608',
 		mxshopaccount: '1500973861',

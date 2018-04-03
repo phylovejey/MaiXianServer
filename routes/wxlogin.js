@@ -3,13 +3,12 @@ var router = express.Router();
 var request = require('request');
 var wxconfig = require('../global/serverconfig').wxconfig;
 var commonfunc = require('../global/commonfunc');
+var redis = require('../global/redis');
 
 //"https://api.weixin.qq.com/sns/jscode2session?appid=$%s&secret=$%s&js_code=$%s&grant_type=authorization_code";
 router.post('/', function(req, res, next){
     var mxres = res;
     var code = req.body.code;
-
-    console.log("phy wxlogin code", code);
 
     request.get({
         uri: wxconfig.wxloginurl,
@@ -21,18 +20,24 @@ router.post('/', function(req, res, next){
             js_code: code           
         }
     }, (err, res, data) => {
-        if(res.statusCode == 200){
-            console.log("phy wxdata ", data);
-            if(data.openid != null){
-                var token = commonfunc.createSessionId();
-                mxres.send({status:1, sessionid:token});
+        if(res.statusCode == 200) {
+            if(data.openid != null) {
+                var sessionid = commonfunc.createSessionId();
+                data.expiredtime = commonfunc.createTimeStamp() + wxconfig.wxsessionidvalidtime;
+                redis.setsession(sessionid, data, function(err) {
+                    if(err) {
+                        mxres.send({status:0, error:"服务器错误"});
+                    }
+                    else {
+                        mxres.send({status:1, sessionid:sessionid});
+                    }
+                });
             }
-            else{
-                mxres.send({status:0, error:data});
+            else {
+                next(err);
             }
         }
-        else{
-            console.log("phy authorization_code error ", err);
+        else {
             next(err);
         }
 
