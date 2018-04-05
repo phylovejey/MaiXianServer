@@ -1,4 +1,5 @@
 var uuidV1 = require('uuid/v1');
+var crypto = require('crypto');
 
 var commonfunc = {
     // 随机字符串产生函数
@@ -11,8 +12,8 @@ var commonfunc = {
         return parseInt(new Date().getTime() / 1000);
     },
 
-    createTradeNo:function() {
-    	return uuidV1().toString();
+    createTradeNo:function() {        
+    	return crypto.randomBytes(16).toString("hex");
     },
 
     createSessionId:function() {
