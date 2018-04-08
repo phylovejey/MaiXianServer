@@ -65,6 +65,10 @@ const orderSchema = new Schema({
 		type: String,
 		default: ''
 	},
+	pay: {
+		type: Boolean,
+		required: true
+	},
 	items: [purchaseitem],
 }, {
 	timestamps: true
