@@ -37,7 +37,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use((req, res, next) => {
+/*app.use((req, res, next) => {
 	if(req.url === '/wxlogin') {
 		next();
 	}
@@ -70,7 +70,7 @@ app.use((req, res, next) => {
 			res.send({status:0, error:{error_code:998, error_des:"sessionid不能为空"}});
 		}
 	}
-});
+});*/
 
 app.use('/wxlogin', wxlogin);
 app.use('/index', indexRouter);

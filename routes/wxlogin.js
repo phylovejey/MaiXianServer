@@ -4,7 +4,8 @@ var request = require('request');
 var wxconfig = require('../global/serverconfig').wxconfig;
 var commonfunc = require('../global/commonfunc');
 var redis = require('../global/redis');
-var WXBizDataCrypt = require('../global/WXBizDataCrypt')
+var WXBizDataCrypt = require('../global/WXBizDataCrypt');
+var users = require('../models/users');
 
 //"https://api.weixin.qq.com/sns/jscode2session?appid=$%s&secret=$%s&js_code=$%s&grant_type=authorization_code";
 router.post('/', function(req, res, next){
@@ -47,10 +48,14 @@ router.post('/', function(req, res, next){
 });
 
 router.post('/register', function(req, res, next){
-    console.log("phy before decryptData ", req.body.encryptedData);
     var pc = new WXBizDataCrypt(wxconfig.mxappid, res.locals.user_sessionkey);
     var data = pc.decryptData(req.body.encryptedData , req.body.iv);
-    console.log("phy after decryptData ", data);
+    
+    users.findOneAndUpdate({openId:data.openId}, data, {new:true,upsert:true})
+    .then((result) => {
+        return res.send({status:1});
+    }, (err) => next(err))
+    .catch((err) => next(err));
 });
 
 module.exports = router;
