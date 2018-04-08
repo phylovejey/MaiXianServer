@@ -37,7 +37,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-/*app.use((req, res, next) => {
+app.use((req, res, next) => {
 	if(req.url === '/wxlogin') {
 		next();
 	}
@@ -55,7 +55,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 							res.send({status:0, error:{error_code:999, error_des:"sessionid已过期,请重新登录"}});
 						}
 						else {
-							req.locals.user_openid = object.openid;
+							res.locals.user_openid = object.openid;
+							res.locals.user_sessionkey = object.session_key;
 							next();
 						}
 					}
@@ -69,7 +70,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 			res.send({status:0, error:{error_code:998, error_des:"sessionid不能为空"}});
 		}
 	}
-});*/
+});
 
 app.use('/wxlogin', wxlogin);
 app.use('/index', indexRouter);
