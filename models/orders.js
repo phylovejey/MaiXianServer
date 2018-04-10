@@ -6,8 +6,7 @@ const Currency = mongoose.Types.Currency;
 const purchaseitem = new Schema({
 	item_objectid: {
 		type: String,
-		required: true,
-		unique: true		
+		required: true,	
 	},
 	item_name: {
 		type: String,
@@ -33,12 +32,10 @@ const orderSchema = new Schema({
 	consumer_objectid: {
 		type: String,
 		required: true,
-		unique: true
 	},
 	consumer_openid: {
 		type: String,
 		required: true,
-		unique: true
 	},
 	consumer_name: {
 		type: String,
@@ -55,7 +52,8 @@ const orderSchema = new Schema({
 	},
 	order_no: {
 		type: String,
-		required: true
+		required: true,
+		unique: true
 	},
 	address: {
 		type: String,

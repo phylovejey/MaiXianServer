@@ -6,6 +6,7 @@ var commonfunc = require('../global/commonfunc');
 var redis = require('../global/redis');
 var WXBizDataCrypt = require('../global/WXBizDataCrypt');
 var users = require('../models/users');
+var authenticate = require('../authenticate');
 
 //"https://api.weixin.qq.com/sns/jscode2session?appid=$%s&secret=$%s&js_code=$%s&grant_type=authorization_code";
 router.post('/', function(req, res, next){
@@ -47,9 +48,15 @@ router.post('/', function(req, res, next){
     });
 });
 
-router.post('/register', function(req, res, next){
-    var pc = new WXBizDataCrypt(wxconfig.mxappid, res.locals.user_sessionkey);
-    var data = pc.decryptData(req.body.encryptedData , req.body.iv);
+router.post('/register', authenticate, function(req, res, next){
+    var data = null;
+    if(req.body.encryptedData) {
+        var pc = new WXBizDataCrypt(wxconfig.mxappid, req.user.session_key);
+        data = pc.decryptData(req.body.encryptedData, req.body.iv);
+    }
+    else {
+        data = {openId:req.user.openid};
+    }
     
     users.findOneAndUpdate({openId:data.openId}, data, {new:true,upsert:true})
     .then((result) => {

@@ -9,7 +9,7 @@ const userSchema = new Schema({
 	},
 	nickName: {
 		type: String,
-		required: true,
+		default: "匿名用户",
 	},
 	gender: {
 		type: Number,

@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var commonfunc = require('../global/commonfunc');
 var wxpay = require('../pay/wxpay');
+var authenticate = require('../authenticate');
 
 var orders = require('../models/orders');
 var itemlists = require('../models/itemlists');
@@ -33,13 +34,15 @@ function createOrder(_userobjectid, _openid, _name, _avartarurl, total_fee, orde
 		order.items.push(item);
 	}
 
+	console.log("phy order ", order);
 	return order;
 }
 
 /* 用户下单 */
-router.post('/', function(req, res, next) {
+router.post('/', authenticate, function(req, res, next) {
 	var trade_no = commonfunc.createTradeNo();
-	var open_id = res.locals.user_openid;//"otek55C4yYD0hfqTqv_cWx2su7z4"
+	var open_id = req.user.openid;//"otek55C4yYD0hfqTqv_cWx2su7z4"
+
 	var user_ip = "119.27.163.117";
 
 	var consumer = null;
@@ -48,21 +51,24 @@ router.post('/', function(req, res, next) {
 	var orderobject = null;
 	var itemquanitys = {};
 	var items = new Array();
+
 	for (var i = req.body.items.length - 1; i >= 0; i--) {
-		item_quanitys[req.body.items[i]._id] = req.body.items[i].quanity;
+		itemquanitys[req.body.items[i]._id] = req.body.items[i].quanity;
 		items.push(req.body.items[i]._id);
 	}
 	var total_fee = req.body.total_fee;
 
 	users.findOne({openId:open_id})
-	.then((user) => consumer = user, (err) => next(err))
-	itemlists.where('_id').in(items)
-	.then((items) => {
-		purchaseitems = items;
+	.then((user) => {
+		consumer = user;
+		return itemlists.where('_id').in(items)
+	}, (err) => next(err))
+	.then((itemdetails) => {
+		purchaseitems = itemdetails;
 
 		var fee = 0;
-		for (var i = items.length - 1; i >= 0; i--) {
-			fee = fee + items[i].normalprice;
+		for (var i = itemdetails.length - 1; i >= 0; i--) {
+			fee = fee + itemdetails[i].normalprice;
 		}
 		total_fee = fee;
 		return wxpay.order(open_id, open_id, trade_no, total_fee, user_ip);
@@ -71,7 +77,7 @@ router.post('/', function(req, res, next) {
 		payinfo = args;
 		if(consumer != null && purchaseitems != null && payinfo != null) {
 			orderobject = createOrder(consumer._id, consumer.openId, consumer.nickName, consumer.avatarUrl, 
-				total_fee, req.body.address, "", false, purchaseitems, itemquanitys);
+				total_fee, trade_no, req.body.address, "", false, purchaseitems, itemquanitys);
 			return orders.create(orderobject);
 		}
 		else {
@@ -88,7 +94,7 @@ router.post('/', function(req, res, next) {
 });
 
 /* 用户获取订单信息 */
-router.get('/', function(req, res, next) {
+router.get('/', authenticate, function(req, res, next) {
 	res.send("send all orders to user");
 });
 
