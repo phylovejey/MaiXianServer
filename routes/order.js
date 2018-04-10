@@ -9,7 +9,8 @@ var itemlists = require('../models/itemlists');
 var users = require('../models/users');
 var agents = require('../models/agents');
 
-function createOrder(_userobjectid, _openid, _name, _avartarurl, total_fee, order_no, address, agent_id, pay, items, item_quanitys) {
+function createOrder(_userobjectid, _openid, _name, _avartarurl, total_fee, order_no, address, 
+	agent_id, pay, items, item_quanitys, order_timestamp, nonceStr, prepay_id, paySign) {
 	var order = {
 		consumer_objectid: _userobjectid, 
 		consumer_openid: _openid,
@@ -20,6 +21,10 @@ function createOrder(_userobjectid, _openid, _name, _avartarurl, total_fee, orde
 		address: address,
 		agent_id: agent_id,
 		pay: pay,
+		order_timestamp:order_timestamp,
+		nonceStr:nonceStr,
+		package:prepay_id,
+		paySign:paySign,
 		items: [],
 	}
 
@@ -68,7 +73,7 @@ router.post('/', authenticate, function(req, res, next) {
 
 		var fee = 0;
 		for (var i = itemdetails.length - 1; i >= 0; i--) {
-			fee = fee + itemdetails[i].normalprice;
+			fee = fee + itemdetails[i].normalprice * itemquanitys[itemdetails[i]._id];
 		}
 		total_fee = fee;
 		return wxpay.order(open_id, open_id, trade_no, total_fee, user_ip);
@@ -77,7 +82,8 @@ router.post('/', authenticate, function(req, res, next) {
 		payinfo = args;
 		if(consumer != null && purchaseitems != null && payinfo != null) {
 			orderobject = createOrder(consumer._id, consumer.openId, consumer.nickName, consumer.avatarUrl, 
-				total_fee, trade_no, req.body.address, "", false, purchaseitems, itemquanitys);
+				total_fee, trade_no, req.body.address, "", false, purchaseitems, itemquanitys, 
+				payinfo.timeStamp, payinfo.nonceStr, payinfo.package, payinfo.paySign);
 			return orders.create(orderobject);
 		}
 		else {
@@ -95,7 +101,12 @@ router.post('/', authenticate, function(req, res, next) {
 
 /* 用户获取订单信息 */
 router.get('/', authenticate, function(req, res, next) {
-	res.send("send all orders to user");
+	var open_id = req.user.openid;//"otek55C4yYD0hfqTqv_cWx2su7z4"
+	orders.find({consumer_openid:open_id})
+	.then((orders) => {
+		return res.send({status:1, orders:orders});
+	}, (err) => next(err))
+	.catch((err) => next(err));
 });
 
 /* 支付回调通知 */

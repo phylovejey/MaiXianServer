@@ -67,6 +67,22 @@ const orderSchema = new Schema({
 		type: Boolean,
 		required: true
 	},
+	order_timestamp: {
+		type: Number,
+		required: true
+	},
+	nonceStr: {
+		type: String,
+		required: true
+	},
+	package: {
+		type: String,
+		required: true
+	},
+	paySign: {
+		type: String,
+		required: true
+	},
 	items: [purchaseitem],
 }, {
 	timestamps: true
