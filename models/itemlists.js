@@ -22,7 +22,7 @@ const itemSchema = new Schema({
 		required: true
 	},
 	category: {
-		type: String,
+		type: Number,
 		required: true
 	},
 	sales:{
@@ -36,12 +36,12 @@ const itemSchema = new Schema({
 		default: 5
 	},
 	normalprice: {
-		type: Currency,
+		type: Number,
 		min: 0,
 		required: true
 	},
 	agentprice: {
-		type: Currency,
+		type: Number,
 		min: 0,
 		required: true
 	},

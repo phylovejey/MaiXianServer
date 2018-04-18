@@ -16,7 +16,9 @@ var config = {
 
 	httpsconfig: {
 		passworld: 'ccyangche1234!'
-	}
+	},
+
+	ctgries:["海鲜水产","肉禽蛋品","新鲜果蔬","特色农产"],
 }
 
 module.exports = config;

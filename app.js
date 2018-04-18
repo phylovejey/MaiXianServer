@@ -6,6 +6,8 @@ var logger = require('morgan');
 
 var wxlogin = require('./routes/wxlogin');
 var indexRouter = require('./routes/index');
+var categoryRouter = require('./routes/category');
+var bannerRouter = require('./routes/banner');
 var itemdetail = require('./routes/itemdetail');
 var order = require('./routes/order');
 var usersRouter = require('./routes/users');
@@ -30,13 +32,15 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
-app.use(logger('dev'));
+//app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/index', indexRouter);
+app.use('/category', categoryRouter);
+app.use('/banner', bannerRouter);
 app.use('/item', itemdetail);
 app.use('/wxlogin', wxlogin);
 app.use('/order', order);

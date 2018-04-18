@@ -3,7 +3,6 @@ var router = express.Router();
 
 var itemlists = require('../models/itemlists');
 
-/* GET home page. */
 router.get('/', function(req, res, next) {
 	var start = req.query.start;
 	var end = req.query.end;
