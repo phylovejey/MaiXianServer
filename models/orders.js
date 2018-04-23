@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-require('mongoose-currency').loadType(mongoose);
-const Currency = mongoose.Types.Currency;
 
 const purchaseitem = new Schema({
 	item_objectid: {
@@ -17,7 +15,7 @@ const purchaseitem = new Schema({
 		default: ''	
 	},
 	item_price: {
-		type: Currency,
+		type: Number,
 		min: 0,
 		required: true,		
 	},
@@ -46,7 +44,7 @@ const orderSchema = new Schema({
 		default: ''
 	},
 	total_fee: {
-		type: Currency,
+		type: Number,
 		min: 0,
 		required: true
 	},
@@ -58,6 +56,22 @@ const orderSchema = new Schema({
 	address: {
 		type: String,
 		required: true
+	},
+	expresscompany: {
+		type: String,
+		default: ''
+	},
+	expressnumber: {
+		type: String,
+		default: ''
+	},
+	takemode: {
+		type: Number,
+		default: 0
+	},
+	takeplace: {
+		type: String,
+		default: ''
 	},
 	agent_id: {
 		type: String,

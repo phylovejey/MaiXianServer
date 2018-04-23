@@ -3,6 +3,7 @@ var router = express.Router();
 var commonfunc = require('../global/commonfunc');
 var wxpay = require('../pay/wxpay');
 var authenticate = require('../authenticate');
+var xmlparser = require('express-xml-bodyparser');
 
 var orders = require('../models/orders');
 var itemlists = require('../models/itemlists');
@@ -10,7 +11,7 @@ var users = require('../models/users');
 var agents = require('../models/agents');
 
 function createOrder(_userobjectid, _openid, _name, _avartarurl, total_fee, order_no, address, 
-	agent_id, pay, items, item_quanitys, order_timestamp, nonceStr, prepay_id, paySign) {
+	agent_id, pay, items, item_quanitys, order_timestamp, nonceStr, prepay_id, paySign, takemode, takeplace) {
 	var order = {
 		consumer_objectid: _userobjectid, 
 		consumer_openid: _openid,
@@ -25,6 +26,8 @@ function createOrder(_userobjectid, _openid, _name, _avartarurl, total_fee, orde
 		nonceStr:nonceStr,
 		package:prepay_id,
 		paySign:paySign,
+		takemode:takemode,
+		takeplace:takeplace,
 		items: [],
 	}
 
@@ -39,7 +42,6 @@ function createOrder(_userobjectid, _openid, _name, _avartarurl, total_fee, orde
 		order.items.push(item);
 	}
 
-	console.log("phy order ", order);
 	return order;
 }
 
@@ -83,7 +85,8 @@ router.post('/', authenticate, function(req, res, next) {
 		if(consumer != null && purchaseitems != null && payinfo != null) {
 			orderobject = createOrder(consumer._id, consumer.openId, consumer.nickName, consumer.avatarUrl, 
 				total_fee, trade_no, req.body.address, "", false, purchaseitems, itemquanitys, 
-				payinfo.timeStamp, payinfo.nonceStr, payinfo.package, payinfo.paySign);
+				payinfo.timeStamp, payinfo.nonceStr, payinfo.package, payinfo.paySign, req.body.takemode,
+				req.body.takeplace);
 			return orders.create(orderobject);
 		}
 		else {
@@ -110,7 +113,7 @@ router.get('/', authenticate, function(req, res, next) {
 });
 
 /* 支付回调通知 */
-router.post('/notify', function(req, res, next) {
+router.post('/notify', xmlparser({trim: false, explicitArray: false}), function(req, res, next) {
 	console.log("phy /notify ", req.body);
 
 	if(req.body.return_code == "SUCCESS"){
