@@ -3,15 +3,14 @@ var router = express.Router();
 
 var itemlists = require('../models/itemlists');
 const ctgries = require('../global/serverconfig').ctgries;
+const pagenum = require('../global/serverconfig').pagenum;
 
 router.get('/:categoryid', function(req, res, next) {
-    var start = req.query.start;
-    var end = req.query.end;
-    itemlists.find({category:req.params.categoryid}).sort("-sales")
+    var pageid = req.query.pageid;
+
+    itemlists.find({category:req.params.categoryid}).sort("-sales").skip(pageid * pagenum).limit(pagenum)
     .then((items) => {
-        start = Math.max(0, start);
-        end = Math.min(end, items.length);
-        res.send({status:1, end:end, lists:items.slice(start, end)});
+		res.send({status:1, len:items.length, lists:items});
     }, (err) => next(err))
     .catch((err) => next(err));
 });

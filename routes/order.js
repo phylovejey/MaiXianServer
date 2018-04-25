@@ -10,37 +10,31 @@ var itemlists = require('../models/itemlists');
 var users = require('../models/users');
 var agents = require('../models/agents');
 
-function createOrder(_userobjectid, _openid, _name, _avartarurl, total_fee, order_no, address, 
-	agent_id, pay, items, item_quanitys, order_timestamp, nonceStr, prepay_id, paySign, takemode, takeplace) {
+function computetotalfee(item, quanity, purchasemode) {
+	if(purchasemode == 0) {
+		return item.agentprice * quanity;
+	}
+	else if(purchasemode == 1) {
+		return item.normalprice * quanity;
+	}
+}
+
+function createOrder(_userobjectid, _itemid, _itemquanity, _purchasemode, _total_fee, _order_no, 
+					_address, _takemode, _agent_id, order_timestamp, nonceStr, prepay_id, paySign) {
 	var order = {
-		consumer_objectid: _userobjectid, 
-		consumer_openid: _openid,
-		consumer_name: _name,
-		consumer_headpic: _avartarurl,
-		total_fee: total_fee,
-		order_no: order_no,
-		address: address,
-		agent_id: agent_id,
-		pay: pay,
+		consumer: _userobjectid, 
+		purchaseitem: _itemid,
+		itemquanity: _itemquanity,
+		purchasemode: _purchasemode,
+		total_fee: _total_fee,
+		order_no: _order_no,
+		address: _address,
+		takemode: _takemode,
+		agent_id: _agent_id,
 		order_timestamp:order_timestamp,
 		nonceStr:nonceStr,
 		package:prepay_id,
 		paySign:paySign,
-		takemode:takemode,
-		takeplace:takeplace,
-		status:0,
-		items: [],
-	}
-
-	for (var i = items.length - 1; i >= 0; i--) {
-		var item = {
-			item_objectid: items[i]._id,
-			item_name: items[i].name,
-			item_briefdes: items[i].briefDes,
-			item_price: items[i].normalprice,
-			item_quanity: item_quanitys[items[i]._id],
-		}
-		order.items.push(item);
 	}
 
 	return order;
@@ -49,45 +43,30 @@ function createOrder(_userobjectid, _openid, _name, _avartarurl, total_fee, orde
 /* 用户下单 */
 router.post('/', authenticate, function(req, res, next) {
 	var trade_no = commonfunc.createTradeNo();
-	var open_id = req.user.openid;//"otek55C4yYD0hfqTqv_cWx2su7z4"
-
+	var open_id = req.user.openid;
 	var user_ip = "119.27.163.117";
 
 	var consumer = null;
-	var purchaseitems = null;
+	var purchaseitem = null;
 	var payinfo = null;
 	var orderobject = null;
-	var itemquanitys = {};
-	var items = new Array();
-
-	for (var i = req.body.items.length - 1; i >= 0; i--) {
-		itemquanitys[req.body.items[i]._id] = req.body.items[i].quanity;
-		items.push(req.body.items[i]._id);
-	}
 	var total_fee = req.body.total_fee;
 
 	users.findOne({openId:open_id})
 	.then((user) => {
 		consumer = user;
-		return itemlists.where('_id').in(items)
+		return itemlists.findById(req.body.itemid);
 	}, (err) => next(err))
-	.then((itemdetails) => {
-		purchaseitems = itemdetails;
-
-		var fee = 0;
-		for (var i = itemdetails.length - 1; i >= 0; i--) {
-			fee = fee + itemdetails[i].normalprice * itemquanitys[itemdetails[i]._id];
-		}
-		total_fee = fee;
+	.then((item) => {
+		purchaseitem = item;
+		total_fee = computetotalfee(item, req.body.quanity, req.body.purchasemode);
 		return wxpay.order(open_id, open_id, trade_no, total_fee, user_ip);
 	}, (err) => next(err))
 	.then((args) => {
 		payinfo = args;
-		if(consumer != null && purchaseitems != null && payinfo != null) {
-			orderobject = createOrder(consumer._id, consumer.openId, consumer.nickName, consumer.avatarUrl, 
-				total_fee, trade_no, req.body.address, "", false, purchaseitems, itemquanitys, 
-				payinfo.timeStamp, payinfo.nonceStr, payinfo.package, payinfo.paySign, req.body.takemode,
-				req.body.takeplace);
+		if(consumer != null && purchaseitem != null && payinfo != null) {
+			orderobject = createOrder(consumer._id, purchaseitem._id, req.body.quanity, req.body.purchasemode, total_fee, trade_no, 
+						req.body.address, req.body.takemode, req.body.agent_id, payinfo.timeStamp, payinfo.nonceStr, payinfo.package, payinfo.paySign);
 			return orders.create(orderobject);
 		}
 		else {
@@ -107,6 +86,8 @@ router.post('/', authenticate, function(req, res, next) {
 router.get('/:status', authenticate, function(req, res, next) {
 	var open_id = req.user.openid;//"otek55C4yYD0hfqTqv_cWx2su7z4"
 	orders.find({consumer_openid:open_id, status:req.params.status})
+	.populate('consumer')
+	.populate('purchaseitem')
 	.then((orders) => {
 		return res.send({status:1, orders:orders});
 	}, (err) => next(err))
@@ -116,9 +97,16 @@ router.get('/:status', authenticate, function(req, res, next) {
 /* 支付回调通知 */
 router.post('/notify', xmlparser({trim: false, explicitArray: false}), function(req, res, next) {
 	if(req.body.xml.return_code == "SUCCESS"){
-		console.log("SUCCESS ");
-		orders.findOneAndUpdate({consumer_openid:req.body.xml.openid, order_no:req.body.xml.out_trade_no},
-								{pay:true, status:1})
+		orders.findOne({consumer_openid:req.body.xml.openid, order_no:req.body.xml.out_trade_no, 
+						nonceStr:req.body.xml.nonce_str, paySign:req.body.xml.sign})
+		.populate('consumer')
+		.populate('purchaseitem')
+		.then((order) => {
+			if(!order.pay) {
+				order.set({pay:true, status:1});
+				return order.save();
+			}
+		}, (err) => next(err))
   		.then((order) => {
 			return res.send({return_code: "SUCCESS", return_msg: "OK"});
   		}, (err) => next(err))

@@ -1,47 +1,38 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-const purchaseitem = new Schema({
-	item_objectid: {
+const addressSchema = new Schema({
+	receivername: {
 		type: String,
 		required: true,	
 	},
-	item_name: {
+	receivermobilephone: {
 		type: String,
-		required: true	
+		required: true
 	},
-	item_briefdes: {
+	receiveraddress: {
 		type: String,
-		default: ''	
-	},
-	item_price: {
-		type: Number,
-		min: 0,
-		required: true,		
-	},
-	item_quanity: {
-		type: Number,
-		min: 1,
-		required: true,		
+		required: true
 	},
 });
 
 const orderSchema = new Schema({
-	consumer_objectid: {
-		type: String,
-		required: true,
+	consumer: {
+		type: mongoose.Schema.Types.ObjectId,
+        ref: 'users'
 	},
-	consumer_openid: {
-		type: String,
-		required: true,
+	purchaseitem: {
+		type: mongoose.Schema.Types.ObjectId,
+        ref: 'itemlists'
 	},
-	consumer_name: {
-		type: String,
-		required: true
+	itemquanity: {
+		type: Number,
+		min: 1,
+		required: true,		
 	},
-	consumer_headpic: {
-		type: String,
-		default: ''
+	purchasemode: {
+		type: Number,
+		default: 0
 	},
 	total_fee: {
 		type: Number,
@@ -53,10 +44,7 @@ const orderSchema = new Schema({
 		required: true,
 		unique: true
 	},
-	address: {
-		type: String,
-		required: true
-	},
+	address: addressSchema,
 	expresscompany: {
 		type: String,
 		default: ''
@@ -71,7 +59,7 @@ const orderSchema = new Schema({
 	},
 	takeplace: {
 		type: String,
-		default: ''
+		default: '成都市高新区远大荷兰水街7号楼一楼(近华府大道地铁站c2口)'
 	},
 	agent_id: {
 		type: String,
@@ -79,7 +67,7 @@ const orderSchema = new Schema({
 	},
 	pay: {
 		type: Boolean,
-		required: true
+		default: false
 	},
 	status: {
 		type: Number,
@@ -101,7 +89,6 @@ const orderSchema = new Schema({
 		type: String,
 		required: true
 	},
-	items: [purchaseitem],
 }, {
 	timestamps: true
 });

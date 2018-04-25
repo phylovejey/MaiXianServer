@@ -1,25 +1,15 @@
 var express = require('express');
 var router = express.Router();
+const pagenum = require('../global/serverconfig').pagenum;
 
 var itemlists = require('../models/itemlists');
 
-router.get('/', function(req, res, next) {
-	var start = req.query.start;
-	var end = req.query.end;
+router.get('/:pageid', function(req, res, next) {
+	var pageid = req.params.pageid;
 
-	itemlists.find({}).sort("-sales")
+	itemlists.find({}).sort("-sales").skip(pageid * pagenum).limit(pagenum)
 	.then((items) => {
-		start = Math.max(0, start);
-		end = Math.min(end, items.length);
-		res.send({status:1, end:end, lists:items.slice(start, end)});
-	}, (err) => next(err))
-	.catch((err) => next(err));
-});
-
-router.post('/', function(req, res, next) {
-	itemlists.create(req.body)
-	.then((item) => {
-		res.send({status:1, item:item});
+		res.send({status:1, len:items.length, lists:items});
 	}, (err) => next(err))
 	.catch((err) => next(err));
 });

@@ -19,6 +19,8 @@ var config = {
 	},
 
 	ctgries:["海鲜水产","肉禽蛋品","新鲜果蔬","特色农产"],
+
+	pagenum: 8,
 }
 
 module.exports = config;

@@ -11,7 +11,6 @@ var bannerRouter = require('./routes/banner');
 var itemdetail = require('./routes/itemdetail');
 var order = require('./routes/order');
 var usersRouter = require('./routes/users');
-var agent = require('./routes/agent');
 
 var mongoose = require('mongoose').set('debug', true);
 mongoose.Promise = require('bluebird');
@@ -45,7 +44,6 @@ app.use('/item', itemdetail);
 app.use('/wxlogin', wxlogin);
 app.use('/order', order);
 app.use('/users', usersRouter);
-app.use('/agent', agent);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

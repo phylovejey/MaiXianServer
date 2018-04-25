@@ -11,7 +11,7 @@ const itemSchema = new Schema({
 		type: String,
 		required: true
 	},
-	bannerImage: {
+	iconImage: {
 		type: String,
 		default: ''
 	},
@@ -21,6 +21,10 @@ const itemSchema = new Schema({
 	},
 	category: {
 		type: Number,
+		required: true
+	},
+	unit: {
+		type: String,
 		required: true
 	},
 	sales:{
@@ -43,6 +47,12 @@ const itemSchema = new Schema({
 		min: 0,
 		required: true
 	},
+	status: {
+		type: Number,
+		min: 0,
+		max: 2
+		default: 0
+	}
 	showinventory: {
 		type: Number,
 		min: 0,

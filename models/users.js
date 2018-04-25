@@ -1,6 +1,21 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
+const addressSchema = new Schema({
+	receivername: {
+		type: String,
+		required: true,	
+	},
+	receivermobilephone: {
+		type: String,
+		required: true
+	},
+	receiveraddress: {
+		type: String,
+		required: true
+	},
+});
+
 const userSchema = new Schema({
 	openId: {
 		type: String,
@@ -37,14 +52,16 @@ const userSchema = new Schema({
 		type: String,
 		default: ''
 	},
-	mobilephone: {
+	point: {
+		type: Number,
+		min: 0,
+		default: 0
+	},
+	coupons:[{
 		type: String,
 		default: ''
-	},
-	address: {
-		type: String,
-		default: ''
-	},
+	}],
+	addresses: [addressSchema],
 }, {
 	timestamps: true
 });
