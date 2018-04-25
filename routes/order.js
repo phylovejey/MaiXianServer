@@ -97,18 +97,48 @@ router.get('/:status', authenticate, function(req, res, next) {
 /* 支付回调通知 */
 router.post('/notify', xmlparser({trim: false, explicitArray: false}), function(req, res, next) {
 	if(req.body.xml.return_code == "SUCCESS"){
+		var groupnum = 0;
 		orders.findOne({consumer_openid:req.body.xml.openid, order_no:req.body.xml.out_trade_no, 
 						nonceStr:req.body.xml.nonce_str, paySign:req.body.xml.sign})
-		.populate('consumer')
-		.populate('purchaseitem')
 		.then((order) => {
 			if(!order.pay) {
-				order.set({pay:true, status:1});
+				if(order.purchasemode == 0) {
+					order.set({pay:true, status:1});
+				}
+				else if(order.purchasemode == 1) {
+					order.set({pay:true, status:2});
+				}
 				return order.save();
+			}
+			else {
+				return res.send({return_code: "SUCCESS", return_msg: "OK"});
+			}
+		}, (err) => {next(err)})
+		.then((order) => {
+			if(order.purchasemode == 0) {
+				return order.populate('purchaseitem');
+			}
+			else if(order.purchasemode == 1) {
+				return res.send({return_code: "SUCCESS", return_msg: "OK"}); 
 			}
 		}, (err) => next(err))
   		.then((order) => {
-			return res.send({return_code: "SUCCESS", return_msg: "OK"});
+  			groupnum = order.purchaseitem.groupnum;
+ 			return orders.find({status: 1, purchaseitem:order.purchaseitem._id});
+  		}, (err) => next(err))
+  		.then((orders) => {
+  			if(orders.length >= groupnum) {
+  				orders.forEach((order) => {
+  					order.set({status: 2});
+  				});
+  				return orders.save();
+  			}
+  			else {
+  				return res.send({return_code: "SUCCESS", return_msg: "OK"});
+  			}
+  		}, (err) => next(err))
+  		.then((results) => {
+  			return res.send({return_code: "SUCCESS", return_msg: "OK"});
   		}, (err) => next(err))
   		.catch((err) => next(err))
 	}

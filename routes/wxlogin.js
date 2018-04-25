@@ -58,7 +58,7 @@ router.post('/register', authenticate, function(req, res, next){
         data = {openId:req.user.openid};
     }
     
-    users.findOneAndUpdate({openId:data.openId}, data, {new:true,upsert:true})
+    users.findOneAndUpdate({openId:data.openId}, {$set:data}, {new:true,upsert:true})
     .then((result) => {
         return res.send({status:1});
     }, (err) => next(err))

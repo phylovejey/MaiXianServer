@@ -23,6 +23,10 @@ const itemSchema = new Schema({
 		type: Number,
 		required: true
 	},
+	groupnum: {
+		type: Number,
+		default: 0
+	},
 	unit: {
 		type: String,
 		required: true
@@ -50,9 +54,9 @@ const itemSchema = new Schema({
 	status: {
 		type: Number,
 		min: 0,
-		max: 2
+		max: 2,
 		default: 0
-	}
+	},
 	showinventory: {
 		type: Number,
 		min: 0,

@@ -57,6 +57,10 @@ const userSchema = new Schema({
 		min: 0,
 		default: 0
 	},
+	agent: {
+		type: mongoose.Schema.Types.ObjectId,
+        ref: 'agents'
+	},
 	coupons:[{
 		type: String,
 		default: ''

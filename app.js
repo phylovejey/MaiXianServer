@@ -10,6 +10,7 @@ var categoryRouter = require('./routes/category');
 var bannerRouter = require('./routes/banner');
 var itemdetail = require('./routes/itemdetail');
 var order = require('./routes/order');
+var address = require('./routes/address');
 var usersRouter = require('./routes/users');
 
 var mongoose = require('mongoose').set('debug', true);
@@ -44,6 +45,7 @@ app.use('/item', itemdetail);
 app.use('/wxlogin', wxlogin);
 app.use('/order', order);
 app.use('/users', usersRouter);
+app.use('/address', address);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
