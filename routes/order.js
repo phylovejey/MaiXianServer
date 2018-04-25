@@ -28,6 +28,7 @@ function createOrder(_userobjectid, _openid, _name, _avartarurl, total_fee, orde
 		paySign:paySign,
 		takemode:takemode,
 		takeplace:takeplace,
+		status:0,
 		items: [],
 	}
 
@@ -103,9 +104,9 @@ router.post('/', authenticate, function(req, res, next) {
 });
 
 /* 用户获取订单信息 */
-router.get('/', authenticate, function(req, res, next) {
+router.get('/:status', authenticate, function(req, res, next) {
 	var open_id = req.user.openid;//"otek55C4yYD0hfqTqv_cWx2su7z4"
-	orders.find({consumer_openid:open_id})
+	orders.find({consumer_openid:open_id, status:req.params.status})
 	.then((orders) => {
 		return res.send({status:1, orders:orders});
 	}, (err) => next(err))
@@ -114,10 +115,14 @@ router.get('/', authenticate, function(req, res, next) {
 
 /* 支付回调通知 */
 router.post('/notify', xmlparser({trim: false, explicitArray: false}), function(req, res, next) {
-	console.log("phy /notify ", req.body);
-
-	if(req.body.return_code == "SUCCESS"){
-		res.send({return_code: "SUCCESS", return_msg: "OK"});
+	if(req.body.xml.return_code == "SUCCESS"){
+		console.log("SUCCESS ");
+		orders.findOneAndUpdate({consumer_openid:req.body.xml.openid, order_no:req.body.xml.out_trade_no},
+								{pay:true, status:1})
+  		.then((order) => {
+			return res.send({return_code: "SUCCESS", return_msg: "OK"});
+  		}, (err) => next(err))
+  		.catch((err) => next(err))
 	}
 	else{
 		res.send({return_code: "FAIL", return_msg: "FAIL"});

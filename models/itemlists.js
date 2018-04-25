@@ -43,6 +43,16 @@ const itemSchema = new Schema({
 		min: 0,
 		required: true
 	},
+	showinventory: {
+		type: Number,
+		min: 0,
+		required: true
+	},
+	realinventory: {
+		type: Number,
+		min: 0,
+		required: true
+	},
 	innerImage: [{
 		type: String,
 		required: true

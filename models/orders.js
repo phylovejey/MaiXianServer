@@ -81,6 +81,10 @@ const orderSchema = new Schema({
 		type: Boolean,
 		required: true
 	},
+	status: {
+		type: Number,
+		default: 0
+	},
 	order_timestamp: {
 		type: Number,
 		required: true
