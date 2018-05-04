@@ -117,40 +117,37 @@ router.post('/notify', xmlparser({trim: false, explicitArray: false}), function(
 		var groupnum = 0;
 		orders.findOne({order_no:req.body.xml.out_trade_no, nonceStr:req.body.xml.nonce_str})
 		.then((order) => {
+        	mxlog.getLogger('log_date').info('支付成功 ', order);
 			if(!order.pay) {
 				if(order.purchasemode == 0) {
-					order.set({pay:true, status:1});
+					return orders.findByIdAndUpdate(order._id, {$set: {pay:true, status:1}}, {new: true, overwrite: false}).populate('purchaseitem');
 				}
 				else if(order.purchasemode == 1) {
-					order.set({pay:true, status:2});
+					return orders.findByIdAndUpdate(order._id, {$set: {pay:true, status:2}}, {new: true, overwrite: false});
 				}
-				return order.save().exec();
 			}
-			else {
-				return res.send({return_code: "SUCCESS", return_msg: "OK"});
-			}
+			return 1;
 		}, (err) => {next(err)})
-		.then((order) => {
-			if(order.purchasemode == 0) {
-				return order.populate('purchaseitem');
-			}
-			else if(order.purchasemode == 1) {
-				return res.send({return_code: "SUCCESS", return_msg: "OK"}); 
-			}
-		}, (err) => next(err))
   		.then((order) => {
-  			groupnum = order.purchaseitem.groupnum;
- 			return orders.find({status: 1, purchaseitem:order.purchaseitem._id});
+  			if(order == 1 || order.purchasemode == 1) {
+  				return 1;
+  			}
+  			else {
+        		mxlog.getLogger('log_date').info('后台修改支付状态成功 ', order);
+				groupnum = order.purchaseitem.groupnum;
+ 				return orders.find({status: 1, purchaseitem:order.purchaseitem._id});
+  			}
   		}, (err) => next(err))
   		.then((orders) => {
-  			if(orders.length >= groupnum) {
+  			if(orders == 1 || orders.length < groupnum) {
+  				return 1;
+  			}
+  			else
+  			{
   				orders.forEach((order) => {
   					order.set({status: 2});
   				});
   				return orders.save();
-  			}
-  			else {
-  				return res.send({return_code: "SUCCESS", return_msg: "OK"});
   			}
   		}, (err) => next(err))
   		.then((results) => {
