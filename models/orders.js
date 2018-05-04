@@ -53,6 +53,10 @@ const orderSchema = new Schema({
 		type: String,
 		default: ''
 	},
+	expressfee: {
+		type: Number,
+		default: 0
+	},
 	takemode: {
 		type: Number,
 		default: 0
@@ -60,6 +64,10 @@ const orderSchema = new Schema({
 	takeplace: {
 		type: String,
 		default: '成都市高新区远大荷兰水街7号楼一楼(近华府大道地铁站c2口)'
+	},
+	comment: {
+		type: String,
+		default: ''
 	},
 	agent_id: {
 		type: String,

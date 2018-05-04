@@ -3,6 +3,7 @@ const commonfunc = require('../global/commonfunc');
 var request = require("request");
 var crypto = require('crypto');
 var Q = require('q');
+var mxlog = require('../global/maixianlog');
 
 var wxpay = {
     getXMLNodeValue: function(node_name, xml) {
@@ -90,8 +91,7 @@ var wxpay = {
         }, function(err, response, body) {
             if (!err && response.statusCode == 200) {
                 var return_code = self.getXMLNodeValue('return_code', body.toString("utf-8")).split('[')[2].split(']')[0];
-                console.log("phy body ", body);
-                
+                mxlog.getLogger('log_date').info('wx response for unipay ', body);               
                 if(return_code == "SUCCESS") {
                     var prepay_id = self.getXMLNodeValue('prepay_id', body.toString("utf-8")).split('[')[2].split(']')[0];
                     //签名

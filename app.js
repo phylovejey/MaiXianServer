@@ -2,7 +2,8 @@ var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+var mxlog = require('./global/maixianlog');
+
 
 var wxlogin = require('./routes/wxlogin');
 var indexRouter = require('./routes/index');
@@ -20,8 +21,8 @@ const dburl = require('./global/serverconfig').dbconfig.url;
 const connect = mongoose.connect(dburl);
 
 connect.then((db) => {
-	console.log('Connected correctly to server');
-}, (err) => { console.log(err);});
+	mxlog.getLogger('log_date').info('Connected correctly to db server');
+}, (err) => { mxlog.getLogger('console').info(err);});
 
 const redis = require('./global/redis');
 redis.connettoredis('127.0.0.1', '6379');

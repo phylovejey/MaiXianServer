@@ -1,4 +1,5 @@
 var redis = require("redis");
+var mxlog = require('./maixianlog');
 
 var globalredis = {
     redisclient: null,
@@ -6,13 +7,13 @@ var globalredis = {
     connettoredis: function(serverip, serverport) {
         this.redisclient = redis.createClient(serverport, serverip);
         this.redisclient.on('error', function(error) {
-            console.log("RedisServer is error!\n" + error);
+            mxlog.getLogger('console').info("RedisServer is error!\n" + error);
         });
         this.redisclient.on("connect", function() {
-            console.log("RedisServer is connected!");
+            mxlog.getLogger('console').info("RedisServer is connected!");
         });
         this.redisclient.on("end", function() {
-            console.log("RedisServer is end!");
+            mxlog.getLogger('console').info("RedisServer is end!");
         });
     },
 
@@ -43,7 +44,7 @@ var globalredis = {
     removesession: function(sessionid, callback) {
         if(callback == null) {
             callback = function(err, response) {
-                console.log("removesession response ", response);
+                mxlog.getLogger('console').info("removesession response ", response);
             }
         }
         

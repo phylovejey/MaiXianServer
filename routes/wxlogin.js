@@ -7,6 +7,7 @@ var redis = require('../global/redis');
 var WXBizDataCrypt = require('../global/WXBizDataCrypt');
 var users = require('../models/users');
 var authenticate = require('../authenticate');
+var mxlog = require('../global/maixianlog');
 
 //"https://api.weixin.qq.com/sns/jscode2session?appid=$%s&secret=$%s&js_code=$%s&grant_type=authorization_code";
 router.post('/', function(req, res, next){
@@ -29,7 +30,7 @@ router.post('/', function(req, res, next){
                 data.expiredtime = commonfunc.createTimeStamp() + wxconfig.wxsessionidvalidtime;
                 redis.setsession(sessionid, data, function(err) {
                     if(err) {
-                        console.log("phy err ", err);
+                        mxlog.getLogger('log_date').info('setsession error ', sessionid);
                         mxres.send({status:0, error:"服务器错误"});
                     }
                     else {

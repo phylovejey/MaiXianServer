@@ -31,6 +31,10 @@ const itemSchema = new Schema({
 		type: String,
 		required: true
 	},
+	weight: {
+		type: Number,
+		required: true
+	},
 	sales:{
 		type: Number,
 		default: 0
