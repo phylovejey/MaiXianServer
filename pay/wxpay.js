@@ -17,7 +17,9 @@ var wxpay = {
         keys = keys.sort()
         var newArgs = {};
         keys.forEach(function(key) {
-            newArgs[key] = args[key];
+            if(args[key] != '') {
+                newArgs[key] = args[key];
+            }
         });
         var string = '';
         for (var k in newArgs) {

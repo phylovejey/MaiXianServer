@@ -5,6 +5,8 @@ var wxpay = require('../pay/wxpay');
 var authenticate = require('../authenticate');
 var xmlparser = require('express-xml-bodyparser');
 var mxlog = require('../global/maixianlog');
+const wxconfig = require('../global/serverconfig').wxconfig;
+var crypto = require('crypto');
 
 var orders = require('../models/orders');
 var itemlists = require('../models/itemlists');
@@ -54,6 +56,7 @@ function createOrder(_userobjectid, _itemid, _itemquanity, _purchasemode, _total
 
 /* 用户下单 */
 router.post('/', authenticate, function(req, res, next) {
+	console.log("phy body ", req.body);
 	var trade_no = commonfunc.createTradeNo();
 	var open_id = req.user.openid;
 	var user_ip = "119.27.163.117";
@@ -111,13 +114,28 @@ router.get('/:statusid', authenticate, function(req, res, next) {
 	.catch((err) => next(err));
 });
 
+function verifynotify(notify) {
+	var orisign = notify.sign;
+	notify.sign = '';
+
+	var string = wxpay.raw(notify);
+	string = string + '&key=' + wxconfig.mxshopapikey;
+    var sign = crypto.createHash('md5').update(string, 'utf8').digest('hex').toUpperCase();
+    return orisign === sign;
+}
+
 /* 支付回调通知 */
 router.post('/notify', xmlparser({trim: false, explicitArray: false}), function(req, res, next) {
 	if(req.body.xml.return_code == "SUCCESS"){
+		if(!verifynotify(req.body.xml)) {
+        	mxlog.getLogger('log_date').info('签名验证失败 ', req.body.xml.out_trade_no);
+			return res.send({return_code: "FAIL", return_msg: "FAIL"});
+		}
+
+        mxlog.getLogger('log_date').info('签名验证成功 ', req.body.xml.out_trade_no);
 		var groupnum = 0;
-		orders.findOne({order_no:req.body.xml.out_trade_no, nonceStr:req.body.xml.nonce_str})
+		orders.findOne({order_no:req.body.xml.out_trade_no, nonceStr:req.body.xml.nonce_str, total_fee:req.body.xml.total_fee})
 		.then((order) => {
-        	mxlog.getLogger('log_date').info('支付成功 ', order);
 			if(!order.pay) {
 				if(order.purchasemode == 0) {
 					return orders.findByIdAndUpdate(order._id, {$set: {pay:true, status:1}}, {new: true, overwrite: false}).populate('purchaseitem');
@@ -133,9 +151,9 @@ router.post('/notify', xmlparser({trim: false, explicitArray: false}), function(
   				return 1;
   			}
   			else {
-        		mxlog.getLogger('log_date').info('后台修改支付状态成功 ', order);
+        		mxlog.getLogger('log_date').info('后台修改支付状态成功 ', order.status);
 				groupnum = order.purchaseitem.groupnum;
- 				return orders.find({status: 1, purchaseitem:order.purchaseitem._id});
+ 				return orders.find({status: 1, purchaseitem:order.purchaseitem._id, order_timestamp:{$lte: order.order_timestamp}});
   			}
   		}, (err) => next(err))
   		.then((orders) => {
@@ -144,10 +162,10 @@ router.post('/notify', xmlparser({trim: false, explicitArray: false}), function(
   			}
   			else
   			{
+  				mxlog.getLogger('log_date').info('待成团订单数量 ', orders.length);
   				orders.forEach((order) => {
-  					order.set({status: 2});
+  					order.set({status: 2}).save();
   				});
-  				return orders.save();
   			}
   		}, (err) => next(err))
   		.then((results) => {
@@ -156,7 +174,7 @@ router.post('/notify', xmlparser({trim: false, explicitArray: false}), function(
   		.catch((err) => next(err))
 	}
 	else{
-		res.send({return_code: "FAIL", return_msg: "FAIL"});
+		return res.send({return_code: "FAIL", return_msg: "FAIL"});
 	}
 });
 
