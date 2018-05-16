@@ -1,6 +1,8 @@
 var config = {
 	wxconfig: {
 		wxloginurl: 'https://api.weixin.qq.com/sns/jscode2session',
+		wxaccesstokenurl: 'https://api.weixin.qq.com/cgi-bin/token',
+		wxsendtempmsgurl: 'https://api.weixin.qq.com/cgi-bin/message/wxopen/template/send',
 		wxunipayurl: 'https://api.mch.weixin.qq.com/pay/unifiedorder',
 		wxpaynotifyurl: 'https://www.ccyangche.com/order/notify',
 		wxsessionidvalidtime: 604800,
@@ -21,6 +23,9 @@ var config = {
 	ctgries:["海鲜水产","肉禽蛋品","新鲜果蔬","特色农产"],
 
 	pagenum: 8,
+
+	templatemsglist:[{"id":"o6b2CdOWdlC5NlFIKzoNQWEIXwN5H6QzvRuFEGmHffE","title":"购买成功通知"},
+					 {"id":"7kEB8tmI2iqXXT5abi6YZaKBXWwv3weJtz6B1CJbSsc","title":"拼团成功通知"}]
 }
 
 module.exports = config;

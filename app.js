@@ -15,7 +15,7 @@ var address = require('./routes/address');
 var usersRouter = require('./routes/users');
 var groupdetail = require('./routes/groupdetail');
 
-var mongoose = require('mongoose').set('debug', true);
+var mongoose = require('mongoose').set('debug', false);
 mongoose.Promise = require('bluebird');
 
 const dburl = require('./global/serverconfig').dbconfig.url;
@@ -27,6 +27,9 @@ connect.then((db) => {
 
 const redis = require('./global/redis');
 redis.connettoredis('127.0.0.1', '6379');
+
+const templatemsgmgr = require('./global/templatemsgmgr');
+templatemsgmgr.getaccesstoken();
 
 var app = express();
 

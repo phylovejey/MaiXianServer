@@ -1,4 +1,5 @@
 var express = require('express');
+var request = require('request');
 var router = express.Router();
 var commonfunc = require('../global/commonfunc');
 var wxpay = require('../pay/wxpay');
@@ -6,6 +7,7 @@ var authenticate = require('../authenticate');
 var xmlparser = require('express-xml-bodyparser');
 var mxlog = require('../global/maixianlog');
 const wxconfig = require('../global/serverconfig').wxconfig;
+const templatemsgmgr = require('../global/templatemsgmgr');
 var crypto = require('crypto');
 
 var orders = require('../models/orders');
@@ -56,7 +58,6 @@ function createOrder(_userobjectid, _itemid, _itemquanity, _purchasemode, _total
 
 /* 用户下单 */
 router.post('/', authenticate, function(req, res, next) {
-	console.log("phy body ", req.body);
 	var trade_no = commonfunc.createTradeNo();
 	var open_id = req.user.openid;
 	var user_ip = "119.27.163.117";
@@ -138,22 +139,27 @@ router.post('/notify', xmlparser({trim: false, explicitArray: false}), function(
 		.then((order) => {
 			if(!order.pay) {
 				if(order.purchasemode == 0) {
-					return orders.findByIdAndUpdate(order._id, {$set: {pay:true, status:1}}, {new: true, overwrite: false}).populate('purchaseitem');
+					return orders.findByIdAndUpdate(order._id, {$set: {pay:true, status:1}}, {new: true, overwrite: false}).populate('consumer').populate('purchaseitem');
 				}
 				else if(order.purchasemode == 1) {
-					return orders.findByIdAndUpdate(order._id, {$set: {pay:true, status:2}}, {new: true, overwrite: false});
+					return orders.findByIdAndUpdate(order._id, {$set: {pay:true, status:2}}, {new: true, overwrite: false}).populate('consumer').populate('purchaseitem');
 				}
 			}
 			return 1;
 		}, (err) => {next(err)})
   		.then((order) => {
+  			if(order != 1) {
+  				var values = new Array(commonfunc.timestampToDateStr(order.order_timestamp*1000), order.purchaseitem.name, order.total_fee/100+"", "", order.order_no, "18682736613");
+  				templatemsgmgr.sendtempmsg(order.consumer.openId, 0, "", order.package, values); 					
+  			}
+
   			if(order == 1 || order.purchasemode == 1) {
   				return 1;
   			}
   			else {
         		mxlog.getLogger('log_date').info('后台修改支付状态成功 ', order.status);
 				groupnum = order.purchaseitem.groupnum;
- 				return orders.find({status: 1, purchaseitem:order.purchaseitem._id, order_timestamp:{$lte: order.order_timestamp}});
+ 				return orders.find({status: 1, purchaseitem:order.purchaseitem._id, order_timestamp:{$lte: order.order_timestamp}}).populate('consumer').populate('purchaseitem');
   			}
   		}, (err) => next(err))
   		.then((orders) => {
@@ -164,6 +170,9 @@ router.post('/notify', xmlparser({trim: false, explicitArray: false}), function(
   			{
   				mxlog.getLogger('log_date').info('待成团订单数量 ', orders.length);
   				orders.forEach((order) => {
+  					var values = new Array(orders.length+"", order.purchaseitem.name, order.purchaseitem.normalprice+"", commonfunc.timestampToDateStr(new Date().getTime()), 
+  						order.purchaseitem.agentprice+"", order.order_no, order.takemode==0?"快递":"自提", order.takeplace, "18682736613");
+  					templatemsgmgr.sendtempmsg(order.consumer.openId, 1, "", order.package, values);
   					order.set({status: 2}).save();
   				});
   			}
