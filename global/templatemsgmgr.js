@@ -20,7 +20,7 @@ templatemsgmgr.getaccesstoken = function(){
         }
     }, (err, res, data) => {
         if(templatemsgmgr.timer != null) {
-             clearInterval(timer);
+             clearInterval(templatemsgmgr.timer);
              templatemsgmgr.timer = null
         }
 

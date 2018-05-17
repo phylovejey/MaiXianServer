@@ -149,8 +149,11 @@ router.post('/notify', xmlparser({trim: false, explicitArray: false}), function(
 		}, (err) => {next(err)})
   		.then((order) => {
   			if(order != 1) {
-  				var values = new Array(commonfunc.timestampToDateStr(order.order_timestamp*1000), order.purchaseitem.name, order.total_fee/100+"", "", order.order_no, "18682736613");
-  				templatemsgmgr.sendtempmsg(order.consumer.openId, 0, "", order.package, values); 					
+  				var values = new Array(commonfunc.timestampToDateStr(order.order_timestamp*1000), order.purchaseitem.name, order.total_fee/100+"", "", order.order_no, "18080410819");
+  				templatemsgmgr.sendtempmsg(order.consumer.openId, 0, "", order.package, values);
+
+  				itemlists.findByIdAndUpdate(order.purchaseitem._id, {$inc:{'sales':order.itemquanity}}, {new:true}, (err, result) => {
+  				}); 					
   			}
 
   			if(order == 1 || order.purchasemode == 1) {
