@@ -3,7 +3,7 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var mxlog = require('./global/maixianlog');
-
+const requestIp = require('request-ip');
 
 var wxlogin = require('./routes/wxlogin');
 var indexRouter = require('./routes/index');
@@ -40,6 +40,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 //app.use(logger('dev'));
+app.use(requestIp.mw())
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -59,7 +60,7 @@ app.use('/address', address);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
-  next(createError(404));
+	next(createError(404));
 });
 
 // error handler

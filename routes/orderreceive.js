@@ -9,7 +9,6 @@ const users = require('../models/users');
 router.post('/:orderid', authenticate, function(req, res, next) {
 	orders.findByIdAndUpdate(req.params.orderid, {$set:{status:3}})
 	.then((order) => {
-		console.log("phy order ", order);
 		return res.send({status:1});
 	}, (err) => next(err))
 	.catch((err) => next(err));

@@ -28,11 +28,11 @@ var commonfunc = {
         return y + '-' + m + '-' + d+' '+h+':'+minute+':'+second;
     },
 
-    createTradeNo:function() {        
+    createTradeNo: function() {        
     	return crypto.randomBytes(16).toString("hex");
     },
 
-    createSessionId:function() {
+    createSessionId: function() {
         return uuidV1().toString();
     }
 }

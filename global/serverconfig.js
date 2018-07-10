@@ -22,10 +22,12 @@ var config = {
 
 	ctgries:["海鲜水产","肉禽蛋品","新鲜果蔬","特色农产"],
 
-	pagenum: 8,
+	pagenum: 3,
 
 	templatemsglist:[{"id":"o6b2CdOWdlC5NlFIKzoNQWEIXwN5H6QzvRuFEGmHffE","title":"购买成功通知"},
-					 {"id":"7kEB8tmI2iqXXT5abi6YZaKBXWwv3weJtz6B1CJbSsc","title":"拼团成功通知"}]
+					 {"id":"7kEB8tmI2iqXXT5abi6YZaKBXWwv3weJtz6B1CJbSsc","title":"拼团成功通知"}],
+
+	servicephone:"18080410819",
 }
 
 module.exports = config;

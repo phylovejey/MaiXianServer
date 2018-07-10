@@ -15,8 +15,8 @@ const passphrase = require('../global/serverconfig').httpsconfig.passworld;
  * Get port from environment and store in Express.
  */
 
-var httpport = normalizePort(process.env.PORT || '8080');
-var httpsport = normalizePort(process.env.PORT || '8443');
+var httpport = normalizePort(process.env.PORT || '80');
+var httpsport = normalizePort(process.env.PORT || '443');
 
 /**
  * Create HTTP and HTTPS server.

@@ -12,15 +12,15 @@ module.exports = function(req, res, next) {
 			}
 			else {
 				if(user != null) {
-					if(commonfunc.createTimeStamp() > user.expiredtime) {
+					/*if(commonfunc.createTimeStamp() > user.expiredtime) {
 						redis.removesession(sessionid);
         				mxlog.getLogger('log_date').info('sessionid已过期 ', sessionid);
 						res.send({status:0, error:{error_code:999, error_des:"sessionid已过期,请重新登录"}});
-					}
-					else {
-						req.user = user;
-						return next();
-					}
+					}*/
+					//else {
+					req.user = user;
+					return next();
+					//}
 				}
 				else {
         			mxlog.getLogger('log_date').info('无效的sessionid ', sessionid);

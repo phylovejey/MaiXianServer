@@ -6,8 +6,12 @@ var wxpay = require('../pay/wxpay');
 var authenticate = require('../authenticate');
 var xmlparser = require('express-xml-bodyparser');
 var mxlog = require('../global/maixianlog');
+
 const wxconfig = require('../global/serverconfig').wxconfig;
+const servicephone = require('../global/serverconfig').servicephone;
 const templatemsgmgr = require('../global/templatemsgmgr');
+const pagenum = require('../global/serverconfig').pagenum;
+
 var crypto = require('crypto');
 
 var orders = require('../models/orders');
@@ -17,7 +21,7 @@ var agents = require('../models/agents');
 
 function computeexpressfee(item, quanity, takemode) {
 	if(takemode == 0) {
-		return 5 * 100;
+		return 12 * 100;
 	}
 	else {
 		return 0;
@@ -41,7 +45,7 @@ function createOrder(_userobjectid, _itemid, _itemquanity, _purchasemode, _total
 		itemquanity: _itemquanity,
 		purchasemode: _purchasemode,
 		total_fee: _total_fee,
-		express_fee: _express_fee,
+		expressfee: _express_fee,
 		comment: _comment,
 		order_no: _order_no,
 		address: _address,
@@ -60,7 +64,7 @@ function createOrder(_userobjectid, _itemid, _itemquanity, _purchasemode, _total
 router.post('/', authenticate, function(req, res, next) {
 	var trade_no = commonfunc.createTradeNo();
 	var open_id = req.user.openid;
-	var user_ip = "119.27.163.117";
+	var user_ip = req.clientIp.split(":")[3];
 
 	var consumer = null;
 	var purchaseitem = null;
@@ -101,16 +105,32 @@ router.post('/', authenticate, function(req, res, next) {
 });
 
 /* 用户获取订单信息 */
-router.get('/:statusid', authenticate, function(req, res, next) {
+router.get('/:statusid/:pageid', authenticate, function(req, res, next) {
 	var statusid = parseInt(req.params.statusid, 10);
+	var pageid = parseInt(req.params.pageid, 10);
 	var open_id = req.user.openid;//"otek55C4yYD0hfqTqv_cWx2su7z4"
 
 	users.findOne({openId:open_id})
 	.then((user) => {
-		return orders.find({consumer:user._id, status:statusid}).populate('consumer').populate('purchaseitem');
+		return orders.find({consumer:user._id, status:statusid}).sort("-order_timestamp").skip(pageid * pagenum).limit(pagenum).populate('consumer').populate('purchaseitem');
 	}, (err) => next(err))
 	.then((orders) => {
-		return res.send({status:1, orders:orders});
+		return res.send({status:1, len:orders.length, orders:orders});
+	}, (err) => next(err))
+	.catch((err) => next(err));
+});
+
+router.delete('/', authenticate, function(req, res, next) {
+	var orderid = req.body.orderid;
+	var open_id = req.user.openid;
+
+	users.findOne({openId:open_id})
+	.then((user) => {
+		return orders.remove({consumer:user._id, _id:orderid, status:0});
+	}, (err) => next(err))
+	.then((result) => {
+		console.log("phy delete ", result);
+		return res.send({status:1});
 	}, (err) => next(err))
 	.catch((err) => next(err));
 });
@@ -133,9 +153,9 @@ router.post('/notify', xmlparser({trim: false, explicitArray: false}), function(
 			return res.send({return_code: "FAIL", return_msg: "FAIL"});
 		}
 
-        mxlog.getLogger('log_date').info('签名验证成功 ', req.body.xml.out_trade_no);
+        mxlog.getLogger('log_date').info('签名验证成功 ', req.body.xml);
 		var groupnum = 0;
-		orders.findOne({order_no:req.body.xml.out_trade_no, nonceStr:req.body.xml.nonce_str, total_fee:req.body.xml.total_fee})
+		orders.findOne({order_no:req.body.xml.out_trade_no, nonceStr:req.body.xml.nonce_str})
 		.then((order) => {
 			if(!order.pay) {
 				if(order.purchasemode == 0) {
@@ -149,7 +169,7 @@ router.post('/notify', xmlparser({trim: false, explicitArray: false}), function(
 		}, (err) => {next(err)})
   		.then((order) => {
   			if(order != 1) {
-  				var values = new Array(commonfunc.timestampToDateStr(order.order_timestamp*1000), order.purchaseitem.name, order.total_fee/100+"", "", order.order_no, "18080410819");
+  				var values = new Array(commonfunc.timestampToDateStr(order.order_timestamp*1000), order.purchaseitem.name, order.total_fee/100+"", "", order.order_no, servicephone);
   				templatemsgmgr.sendtempmsg(order.consumer.openId, 0, "", order.package, values);
 
   				itemlists.findByIdAndUpdate(order.purchaseitem._id, {$inc:{'sales':order.itemquanity}}, {new:true}, (err, result) => {
@@ -174,7 +194,7 @@ router.post('/notify', xmlparser({trim: false, explicitArray: false}), function(
   				mxlog.getLogger('log_date').info('待成团订单数量 ', orders.length);
   				orders.forEach((order) => {
   					var values = new Array(orders.length+"", order.purchaseitem.name, order.purchaseitem.normalprice+"", commonfunc.timestampToDateStr(new Date().getTime()), 
-  						order.purchaseitem.agentprice+"", order.order_no, order.takemode==0?"快递":"自提", order.takeplace, "18682736613");
+  						order.purchaseitem.agentprice+"", order.order_no, order.takemode==0?"快递":"自提", order.takeplace, servicephone);
   					templatemsgmgr.sendtempmsg(order.consumer.openId, 1, "", order.package, values);
   					order.set({status: 2}).save();
   				});
